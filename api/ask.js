@@ -1,40 +1,28 @@
 import Groq from "groq-sdk";
 
-export const config = {
-  runtime: "edge"
-};
-
-export default async function handler(request) {
+export default async function handler(req, res) {
   try {
-
-    // Parse JSON safely
-    const { question } = await request.json();
+    // Parse JSON body
+    const { question } = req.body;
 
     const groq = new Groq({
       apiKey: process.env.GROQ_API_KEY
     });
 
     const response = await groq.chat.completions.create({
-      model: "llama-3.2-1b-preview",
+      model: "llama3-8b-8192",
       messages: [
         { role: "user", content: question }
       ]
     });
 
-    return new Response(
-      JSON.stringify({ answer: response.choices[0].message.content }),
-      {
-        headers: { "Content-Type": "application/json" }
-      }
-    );
+    res.status(200).json({
+      answer: response.choices[0].message.content
+    });
 
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" }
-      }
-    );
+    res.status(500).json({
+      error: error.message
+    });
   }
 }
